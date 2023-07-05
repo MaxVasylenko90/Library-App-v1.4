@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>User Prodile:</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+</head>
+<body>
+<div class="container text-left">
+    <h4>User Info:</h4>
+    <p th:text="'Name: ' + ${person.getName()}"></p>
+    <p th:text="'Year: ' + ${person.getYear()}"></p>
+    <p th:text="'Email: ' + ${person.getEmail()}"></p>
+    <hr/>
+    <div th:switch="${books.getBookDTOList().size()}">
+        <div th:case="0">
+            <p th:text="${person.getName()} + ' doesn\'t have any book yet!'">value</p>
+        </div>
+        <div th:case="*">
+            <span><b>Books:</b></span>
+            <p th:each="book : ${books.getBookDTOList()}">
+                <a th:href="@{/books/{id}(id=${book.getId()})}"
+                   th:text="${book.getName()} + ', ' + ${book.getAuthor()} + ', ' + ${book.getYear()}">book</a>
+                <span th:if="${book.isExpired() == true}" th:text="'is expired!'" th:style="'color: red'">
+                </span>
+            </p>
+        </div>
+    </div>
+    <br/>
+    <hr/>
+    <div>
+        <a th:href="@{/people/{id}/edit(id=${person.getId()})}" class="btn btn-success">Edit</a>
+    </div>
+    <br/>
+    <div th:if="${admin}">
+        <div>
+            <form th:method="DELETE" th:action="@{/people/{id}(id=${person.getId()})}">
+                <input type="submit" class="btn btn-danger" value="Delete user"/>
+            </form>
+        </div>
+    </div>
+    <form th:method="POST" th:action="@{/logout}">
+        <input type="submit" value="Logout">
+    </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+        crossorigin="anonymous"></script>
+</body>
+</html>
