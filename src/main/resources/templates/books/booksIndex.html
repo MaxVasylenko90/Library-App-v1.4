@@ -9,14 +9,33 @@
 </head>
 <body>
 <div class="container text-left">
-    <h1 class="text-center">Book List:</h1>
-    <form th:method="POST" th:action="@{/books/search}">
-        <div class="mb-3">
-            <label for="searchQuery" class="form-label">Search:</label>
-            <input type="text" class="form-control" id="searchQuery" name="searchQuery">
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/people}">People</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" th:href="@{/books?page=0&books_per_page=5}">Books</a>
+                </li>
+                &nbsp
+                <form class="d-flex" role="search" th:method="POST" th:action="@{/books/search}">
+                    <input class="form-control me-2" label for="searchQuery" type="search" placeholder="Book search"
+                           aria-label="Search" id="searchQuery" name="searchQuery">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
+                &nbsp
+                &nbsp
+                <form class="d-flex" th:method="POST" th:action="@{/logout}">
+                    <input type="submit" value="Logout">
+                </form>
+            </ul>
         </div>
-        <button type="submit" class="btn btn-primary">Search</button>
-    </form>
+    </nav>
+    <h3 class="text-center">Book List:</h3>
+    <div>
+        <a th:href="@{/books/new}" class="btn btn-success">Add new book</a>
+    </div>
     </br>
     <table class="table table-striped">
         <thead>
@@ -42,10 +61,6 @@
     </table>
     </br>
     </hr>
-    <div>
-        <hr/>
-        <a th:href="@{/books/new}" class="btn btn-success">Add new book</a>
-    </div>
     <div th:if="${currentPage}">
         <nav aria-label="Page navigation">
             <ul class="pagination">

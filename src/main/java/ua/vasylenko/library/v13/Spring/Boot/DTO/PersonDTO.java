@@ -19,7 +19,7 @@ public class PersonDTO {
     @NotEmpty(message = "You should to specify your email!")
     private String email;
 
-    @NotNull(message = "Create a password!")
+    @NotNull(message = "Create a password!",groups = CreateByUser.class)
     private String password;
 
 

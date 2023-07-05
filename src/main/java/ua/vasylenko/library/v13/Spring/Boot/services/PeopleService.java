@@ -2,6 +2,9 @@ package ua.vasylenko.library.v13.Spring.Boot.services;
 
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,10 @@ public class PeopleService {
 
     public List<Person> getPeople() {
         return peopleRepository.findAll();
+    }
+
+    public Page<Person> getPeople(int pageNumber, int pageSize, String sort) {
+        return peopleRepository.findAll(PageRequest.of(pageNumber, pageSize, Sort.by(sort)));
     }
 
     @Transactional
@@ -77,5 +84,9 @@ public class PeopleService {
         person.setPassword(passwordEncoder.encode(person.getPassword()));
         person.setRole("USER");
         peopleRepository.save(person);
+    }
+
+    public List<Person> findByNameContainingIgnoreCase(String query) {
+        return peopleRepository.findByNameContainingIgnoreCase(query);
     }
 }

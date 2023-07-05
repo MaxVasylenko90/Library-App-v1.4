@@ -9,22 +9,45 @@
 </head>
 <body>
 <div class="container text-left">
+  <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active" th:href="@{/people}">People</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" aria-current="page" th:href="@{/books?page=0&books_per_page=5}">Books</a>
+        </li>
+        &nbsp
+        <form class="d-flex" role="search" th:method="POST" th:action="@{/people/search}">
+          <input class="form-control me-2" label for="searchQuery" type="search" placeholder="People search" aria-label="Search" id="searchQuery" name="searchQuery">
+          <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+        &nbsp
+        &nbsp
+        <form class="d-flex" th:method="POST" th:action="@{/logout}">
+          <input type="submit" value="Logout">
+        </form>
+      </ul>
+    </div>
+  </nav>
   <h3 class="text-center">Create new library user:</h3>
   <form th:method="POST" th:action="@{/people}" th:object="${person}">
-    <div class="mb-0">
+    <div class="col-md-2">
       <label for="name" class="form-label">Name</label>
       <input th:type="text" class="form-control" id="name" th:field="*{name}">
       <div style="color: red" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name Error</div>
     </div>
-    <div class="mb-3">
+    <div class="col-md-2">
       <label for="year" class="form-label">Year of birth</label>
       <input type="text" class="form-control" id="year" th:field="*{year}">
       <div style="color: red" th:if="${#fields.hasErrors('year')}" th:errors="*{year}">Year Error</div>
     </div>
-    <div class="mb-3">
+    <div class="col-md-2">
       <label for="email" class="form-label">Email</label>
       <input type="text" class="form-control" id="email" th:field="*{email}">
       <div style="color: red" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email Error</div>
+      <div>Default user password is <b>111</b>! Don't forget to tell it to a new user and ask to change it to your own! </div>
     </div>
     <button type="submit" class="btn btn-success">Create</button>
   </form>

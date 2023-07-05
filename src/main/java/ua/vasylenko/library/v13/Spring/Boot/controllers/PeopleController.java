@@ -3,6 +3,7 @@ package ua.vasylenko.library.v13.Spring.Boot.controllers;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,8 @@ import ua.vasylenko.library.v13.Spring.Boot.util.PersonDTOValidator;
 import ua.vasylenko.library.v13.Spring.Boot.util.CreateByAdmin;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -43,10 +46,22 @@ public class PeopleController {
     }
 
     @GetMapping
-    public String mainPage(Model model) {
-        model.addAttribute("peopleList", new PeopleResponse(peopleService.getPeople().stream()
-                .map(this :: convertToPersonDTOWithAllFields).collect(Collectors.toList())));
-        return "people/index";
+    public String mainPage(Model model, @RequestParam(value = "page") Optional<Integer> pageNumber,
+                           @RequestParam(value = "person_per_page", defaultValue = "5") Integer pageSize,
+                           @RequestParam(value = "sort_by", defaultValue = "name") Optional<String> sort) {
+//        model.addAttribute("peopleList", new PeopleResponse(peopleService.getPeople().stream()
+//                .map(this :: convertToPersonDTOWithAllFields).collect(Collectors.toList())));
+//        return "peopleIndex";
+        if (pageNumber.isEmpty())
+            return "redirect:/people?page=0&person_per_page=5";
+        Page page = peopleService.getPeople(pageNumber.get(), pageSize, sort.get());
+        PeopleResponse peopleList = new PeopleResponse(convertToListDTO(page.getContent()));
+        model.addAttribute("peopleList", peopleList);
+        model.addAttribute("currentPage", pageNumber.get() + 1);
+        model.addAttribute("totalPages", page.getTotalPages());
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("sortSuffix", sort.get());
+        return "people/peopleIndex";
     }
 
 
@@ -56,7 +71,7 @@ public class PeopleController {
     }
 
     @PostMapping()
-    public String createNewUser(@ModelAttribute("person") @Validated(CreateByAdmin.class) PersonDTO personDTO, BindingResult bindingResult) {
+    public String createNewUser(@ModelAttribute("person") @Valid @Validated(CreateByAdmin.class) PersonDTO personDTO, BindingResult bindingResult) {
         personDTOValidator.validate(personDTO, bindingResult);
         if (bindingResult.hasErrors())
             return "people/newUser";
@@ -74,7 +89,8 @@ public class PeopleController {
             model.addAttribute("books", new BooksResponse(peopleService.getBooksByPerson(id).stream()
                     .map(this ::convertToBookDTOWithAllFields).collect(Collectors.toList())));
             if (personDetails.getPerson().getRole().equals("ADMIN"))
-                model.addAttribute("admin", convertToPersonDTOWithAllFields(personDetails.getPerson()));
+                model.addAttribute("admin", true);
+            else model.addAttribute("admin", false);
             return "people/userPage";
         }
         return "people/accessDenied";
@@ -98,7 +114,7 @@ public class PeopleController {
 
 
     @PatchMapping("/{id}")
-    public String updateUser(@ModelAttribute("user") @Validated(CreateByAdmin.class) PersonDTOAllFields personDTO,
+    public String updateUser(@ModelAttribute("user") @Valid @Validated(CreateByAdmin.class) PersonDTOAllFields personDTO,
                              @PathVariable("id") int userId, BindingResult bindingResult) {
         personDTOAllFieldsValidator.validate(personDTO, bindingResult);
         if(bindingResult.hasErrors())
@@ -111,6 +127,17 @@ public class PeopleController {
     public String deleteUser(@PathVariable("id") int userId) {
         peopleService.delete(userId);
         return "redirect:/people";
+    }
+
+    @GetMapping("/search")
+    public String search() {
+        return "people/search";
+    }
+
+    @PostMapping("/search")
+    public String searchResult(Model model, @RequestParam("searchQuery") String query) {
+        model.addAttribute("personList", new PeopleResponse(convertToListDTO(peopleService.findByNameContainingIgnoreCase(query))));
+        return "people/search";
     }
 
     private PersonDTOAllFields convertToPersonDTOWithAllFields(Person person) {
@@ -130,6 +157,10 @@ public class PeopleController {
     }
     private PersonDTOAllFields convertToPersonDTOAllFields(Person person) {
         return modelMapper.map(person, PersonDTOAllFields.class);
+    }
+
+    private List<PersonDTOAllFields> convertToListDTO(List<Person> people) {
+        return people.stream().map(this::convertToPersonDTOAllFields).collect(Collectors.toList());
     }
     private static PersonDetails getPersonDetails() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

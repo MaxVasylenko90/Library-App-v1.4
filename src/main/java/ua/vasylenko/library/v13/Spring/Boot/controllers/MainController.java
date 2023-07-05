@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,14 +39,17 @@ public class MainController {
     }
 
     @GetMapping("/")
-    public String mainPage(RedirectAttributes redirectAttributes) {
+    public String mainPage(RedirectAttributes redirectAttributes, Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         PersonDetails personDetails = (PersonDetails) authentication.getPrincipal();
-        if (personDetails.getPerson().getRole().equals("ADMIN"))
+        if (personDetails.getPerson().getRole().equals("ADMIN")) {
+            model.addAttribute("name", personDetails.getPerson().getName());
             return "mainPage";
-        redirectAttributes.addAttribute("id", personDetails.getPerson().getId());
-        return "redirect:/people/{id}";
-
+        } else {
+            redirectAttributes.addAttribute("id", personDetails.getPerson().getId());
+            model.addAttribute("name", personDetails.getPerson().getName());
+            return "redirect:/people/{id}";
+        }
     }
 
     @GetMapping("/registration")

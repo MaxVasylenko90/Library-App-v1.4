@@ -40,16 +40,16 @@ public class BooksController {
     public String bookList(Model model, @RequestParam(value = "page") Optional<Integer> pageNumber,
                            @RequestParam(value = "books_per_page", defaultValue = "5") Integer pageSize,
                            @RequestParam(value = "sort_by", defaultValue = "name") Optional<String> sort) {
-            if (pageNumber.isEmpty())
-                return "redirect:/books?page=0&books_per_page=5";
-            Page page = booksService.findAll(pageNumber.get(), pageSize, sort.get());
-            BooksResponse bookList = new BooksResponse(convertToListDTO(page.getContent()));
-            model.addAttribute("bookList", bookList);
-            model.addAttribute("currentPage", pageNumber.get() + 1);
-            model.addAttribute("totalPages", page.getTotalPages());
-            model.addAttribute("pageSize", pageSize);
-            model.addAttribute("sortSuffix", sort.get());
-        return "books/index";
+        if (pageNumber.isEmpty())
+            return "redirect:/books?page=0&books_per_page=5";
+        Page page = booksService.findAll(pageNumber.get(), pageSize, sort.get());
+        BooksResponse bookList = new BooksResponse(convertToListDTO(page.getContent()));
+        model.addAttribute("bookList", bookList);
+        model.addAttribute("currentPage", pageNumber.get() + 1);
+        model.addAttribute("totalPages", page.getTotalPages());
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("sortSuffix", sort.get());
+        return "books/booksIndex";
     }
 
     @GetMapping("/search")
@@ -85,12 +85,12 @@ public class BooksController {
         if (tmpBook.getPerson() != null)
             model.addAttribute("owner", modelMapper.map(book.getPerson(), PersonDTOAllFields.class));
         else model.addAttribute("people", new PeopleResponse(peopleService.getPeople()
-                    .stream().map(this::convertToPersonDTO).collect(Collectors.toList())));
+                .stream().map(this::convertToPersonDTO).collect(Collectors.toList())));
         return "books/bookPage";
     }
 
     @PatchMapping("/{id}/assign")
-    public String bookAssign(@PathVariable("id") int bookId, @ModelAttribute("editedPerson")  PersonDTOAllFields person) {
+    public String bookAssign(@PathVariable("id") int bookId, @ModelAttribute("editedPerson") PersonDTOAllFields person) {
         booksService.assignPerson(bookId, person.getId());
         return "redirect:/books/{id}";
     }
@@ -122,8 +122,9 @@ public class BooksController {
     private BookDTOAllFields convertToBookDTOAllFields(Book book) {
         return modelMapper.map(book, BookDTOAllFields.class);
     }
+
     private List<BookDTOAllFields> convertToListDTO(List<Book> books) {
-        return books.stream().map(this :: convertToBookDTOAllFields).collect(Collectors.toList());
+        return books.stream().map(this::convertToBookDTOAllFields).collect(Collectors.toList());
     }
 
     public PersonDTOAllFields convertToPersonDTO(Person person) {
