@@ -65,4 +65,9 @@ public class MainController {
         peopleService.registration(modelMapper.map(personDTO, Person.class));
         return "redirect:/auth/login";
     }
+
+    @GetMapping("/recovery")
+    public String recoverMyPassword() {
+        return "auth/recovery";
+    }
 }
