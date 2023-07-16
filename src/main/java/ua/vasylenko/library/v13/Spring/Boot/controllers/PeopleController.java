@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import ua.vasylenko.library.v13.Spring.Boot.DTO.*;
 import ua.vasylenko.library.v13.Spring.Boot.models.Book;
 import ua.vasylenko.library.v13.Spring.Boot.models.Person;
+import ua.vasylenko.library.v13.Spring.Boot.repositories.BooksRepository;
 import ua.vasylenko.library.v13.Spring.Boot.security.PersonDetails;
 import ua.vasylenko.library.v13.Spring.Boot.services.PeopleService;
 import ua.vasylenko.library.v13.Spring.Boot.util.PersonDTOAllFieldsValidator;
@@ -35,14 +36,17 @@ public class PeopleController {
     private final PersonDTOAllFieldsValidator personDTOAllFieldsValidator;
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
+    private final BooksRepository booksRepository;
 
     @Autowired
-    public PeopleController(PeopleService peopleService, PersonDTOValidator personDTOValidator, PersonDTOAllFieldsValidator personDTOAllFieldsValidator, ModelMapper modelMapper, PasswordEncoder passwordEncoder) {
+    public PeopleController(PeopleService peopleService, PersonDTOValidator personDTOValidator, PersonDTOAllFieldsValidator personDTOAllFieldsValidator, ModelMapper modelMapper, PasswordEncoder passwordEncoder,
+                            BooksRepository booksRepository) {
         this.peopleService = peopleService;
         this.personDTOValidator = personDTOValidator;
         this.personDTOAllFieldsValidator = personDTOAllFieldsValidator;
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
+        this.booksRepository = booksRepository;
     }
 
     @GetMapping
@@ -84,10 +88,11 @@ public class PeopleController {
     @GetMapping("/{id}")
     public String userProfile(@PathVariable("id") int id, Model model) {
         PersonDetails personDetails = getPersonDetails();
+        BooksResponse booksResponse = new BooksResponse(peopleService.getBooksByPerson(id).stream()
+                .map(this ::convertToBookDTOWithAllFields).collect(Collectors.toList()));
         if (personDetails.getPerson().getRole().equals("ADMIN") || personDetails.getPerson().getId() == id) {
             model.addAttribute("person", convertToPersonDTOWithAllFields(peopleService.getPerson(id)));
-            model.addAttribute("books", new BooksResponse(peopleService.getBooksByPerson(id).stream()
-                    .map(this ::convertToBookDTOWithAllFields).collect(Collectors.toList())));
+            model.addAttribute("books", booksResponse);
             if (personDetails.getPerson().getRole().equals("ADMIN"))
                 model.addAttribute("admin", true);
             else model.addAttribute("admin", false);

@@ -45,18 +45,17 @@
         </div>
         <div th:case="*">
             <span><b>Books:</b></span>
-            <p th:each="book : ${books.getBookDTOList()}">
+            <div th:each="book : ${books.getBookDTOList()}">
             <div th:if="${admin} == true">
                 <a th:href="@{/books/{id}(id=${book.getId()})}"
                    th:text="${book.getName()} + ', ' + ${book.getAuthor()} + ', ' + ${book.getYear()}">book</a>
             </div>
-            <
             <div th:if="${admin} == false">
                 <div th:text="${book.getName()} + ', ' + ${book.getAuthor()} + ', ' + ${book.getYear()}">book</div>
                 <span th:if="${book.isExpired() == true}" th:text="'is expired!'" th:style="'color: red'">
                 </span>
-                </p>
             </div>
+            </p>
         </div>
         <br/>
         <hr/>
@@ -64,6 +63,11 @@
             <a th:href="@{/people/{id}/edit(id=${person.getId()})}" class="btn btn-success">Edit</a>
         </div>
         <br/>
+        <div th:if="${admin} == false">
+            <form class="d-flex" th:method="POST" th:action="@{/logout}">
+                <input type="submit" value="Logout">
+            </form>
+        </div>
         <div th:if="${admin}">
             <div>
                 <form th:method="DELETE" th:action="@{/people/{id}(id=${person.getId()})}">
