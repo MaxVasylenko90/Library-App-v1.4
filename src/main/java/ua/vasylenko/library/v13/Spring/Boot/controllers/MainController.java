@@ -1,5 +1,6 @@
 package ua.vasylenko.library.v13.Spring.Boot.controllers;
 
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,29 +9,34 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ua.vasylenko.library.v13.Spring.Boot.DTO.PersonDTO;
 import ua.vasylenko.library.v13.Spring.Boot.models.Person;
 import ua.vasylenko.library.v13.Spring.Boot.security.PersonDetails;
+import ua.vasylenko.library.v13.Spring.Boot.services.EmailService;
 import ua.vasylenko.library.v13.Spring.Boot.services.PeopleService;
-import ua.vasylenko.library.v13.Spring.Boot.util.CreateByUser;
 import ua.vasylenko.library.v13.Spring.Boot.util.PersonDTOValidator;
+
+import java.util.Locale;
 
 @Controller
 public class MainController {
     private final PersonDTOValidator personDTOValidator;
     private final PeopleService peopleService;
     private final ModelMapper modelMapper;
+    private final EmailService emailService;
 
     @Autowired
-    public MainController(PersonDTOValidator personDTOValidator, PeopleService peopleService, ModelMapper modelMapper) {
+    public MainController(PersonDTOValidator personDTOValidator, PeopleService peopleService,
+                          ModelMapper modelMapper, EmailService emailService) {
         this.personDTOValidator = personDTOValidator;
         this.peopleService = peopleService;
         this.modelMapper = modelMapper;
+        this.emailService = emailService;
     }
 
     @GetMapping("/auth/login")
@@ -67,7 +73,18 @@ public class MainController {
     }
 
     @GetMapping("/recovery")
-    public String recoverMyPassword() {
+    public String recoverMyPassword(@RequestParam(value = "error", required = false) Boolean error) {
         return "auth/recovery";
+    }
+
+    @PostMapping("/recovery")
+    public String recoveryProcess(@RequestParam("email") String email, RedirectAttributes redirectAttributes) throws MessagingException {
+        Person personFromDb = peopleService.getPerson(email).orElse(null);
+        if (personFromDb == null) {
+            redirectAttributes.addFlashAttribute("error", true);
+            return "auth/recovery";
+        }
+        this.emailService.sendSimpleMail(personFromDb.getName(), email, Locale.ENGLISH);
+        return "redirect:/auth/sent.html";
     }
 }

@@ -35,27 +35,21 @@ public class PeopleController {
     private final PersonDTOValidator personDTOValidator;
     private final PersonDTOAllFieldsValidator personDTOAllFieldsValidator;
     private final ModelMapper modelMapper;
-    private final PasswordEncoder passwordEncoder;
-    private final BooksRepository booksRepository;
 
     @Autowired
-    public PeopleController(PeopleService peopleService, PersonDTOValidator personDTOValidator, PersonDTOAllFieldsValidator personDTOAllFieldsValidator, ModelMapper modelMapper, PasswordEncoder passwordEncoder,
-                            BooksRepository booksRepository) {
+    public PeopleController(PeopleService peopleService, PersonDTOValidator personDTOValidator,
+                            PersonDTOAllFieldsValidator personDTOAllFieldsValidator, ModelMapper modelMapper) {
         this.peopleService = peopleService;
         this.personDTOValidator = personDTOValidator;
         this.personDTOAllFieldsValidator = personDTOAllFieldsValidator;
         this.modelMapper = modelMapper;
-        this.passwordEncoder = passwordEncoder;
-        this.booksRepository = booksRepository;
+
     }
 
     @GetMapping
     public String mainPage(Model model, @RequestParam(value = "page") Optional<Integer> pageNumber,
                            @RequestParam(value = "person_per_page", defaultValue = "5") Integer pageSize,
                            @RequestParam(value = "sort_by", defaultValue = "name") Optional<String> sort) {
-//        model.addAttribute("peopleList", new PeopleResponse(peopleService.getPeople().stream()
-//                .map(this :: convertToPersonDTOWithAllFields).collect(Collectors.toList())));
-//        return "peopleIndex";
         if (pageNumber.isEmpty())
             return "redirect:/people?page=0&person_per_page=5";
         Page page = peopleService.getPeople(pageNumber.get(), pageSize, sort.get());
