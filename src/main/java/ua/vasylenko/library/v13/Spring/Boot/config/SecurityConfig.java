@@ -34,7 +34,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/login", "error", "registration", "/recovery").permitAll()
                         .requestMatchers("/", "/people/{id}", "/people/{id}/edit").hasAnyAuthority("ADMIN", "USER")
-//                        .requestMatchers("/logout").hasAnyAuthority("ADMIN", "USER")
                         .anyRequest().hasAuthority("ADMIN")
                 )
                 .formLogin(formLogin -> formLogin
