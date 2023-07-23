@@ -58,7 +58,7 @@ public class PeopleService {
         person.setId(userId);
         person.setPassword(personFromDb.getPassword());
         person.setBooks(personFromDb.getBooks());
-        if(person.getRole() == null)
+        if (person.getRole() == null)
             person.setRole(personFromDb.getRole());
         peopleRepository.save(person);
     }
@@ -88,5 +88,12 @@ public class PeopleService {
 
     public List<Person> findByNameContainingIgnoreCase(String query) {
         return peopleRepository.findByNameContainingIgnoreCase(query);
+    }
+
+    @Transactional
+    public void updateUserPassword(String email, String password) {
+        Person person = peopleRepository.findByEmail(email).orElse(null);
+        person.setPassword(passwordEncoder.encode(password));
+        peopleRepository.save(person);
     }
 }

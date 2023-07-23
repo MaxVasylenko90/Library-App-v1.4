@@ -1,60 +1,69 @@
 package ua.vasylenko.library.v13.Spring.Boot.services;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import java.util.Arrays;
-import java.util.Date;
+import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
 @Service
-@PropertySource("classpath:mail/emailconfig.properties")
+@PropertySource("classpath:application.properties")
 public class EmailService {
-
-//    private static final String EMAIL_SIMPLE_TEMPLATE_NAME = "html/email-simple";
-    private static final String SENDER = "mail.server.username";
-
     private final JavaMailSender mailSender;
     private final TemplateEngine htmlTemplateEngine;
+    private final Environment environment;
     @Autowired
-    public EmailService(JavaMailSender mailSender, @Qualifier("emailTemplateEngine") TemplateEngine htmlTemplateEngine) {
+    public EmailService(JavaMailSender mailSender, @Qualifier("emailTemplateEngine") TemplateEngine htmlTemplateEngine, Environment environment) {
         this.mailSender = mailSender;
         this.htmlTemplateEngine = htmlTemplateEngine;
+        this.environment = environment;
     }
 
     public void sendSimpleMail(
             final String recipientName, final String recipientEmail, final Locale locale)
-            throws MessagingException {
+            throws MessagingException, UnsupportedEncodingException {
 
-        // Prepare the evaluation context
-        final Context ctx = new Context(locale);
-        ctx.setVariable("name", recipientName);
-        ctx.setVariable("subscriptionDate", new Date());
+        String TEMPLATE_NAME = "auth/passwordRecoveryMail";
+        String SPRING_LOGO_IMAGE = "templates/images/spring.png";
+        String PNG_MIME = "image/png";
+        String MAIL_SUBJECT = "Password Recovery";
 
-        // Prepare message using a Spring helper
+        String mailFrom = environment.getProperty("spring.mail.properties.mail.smtp.from");
+        String mailFromName = environment.getProperty("mail.from.name", "Identity");
+
         final MimeMessage mimeMessage = this.mailSender.createMimeMessage();
-        final MimeMessageHelper message = new MimeMessageHelper(mimeMessage, "UTF-8");
-        message.setSubject("Password recovery");
-        message.setFrom(SENDER);
-        message.setTo(recipientEmail);
+        final MimeMessageHelper email = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-        // Create the HTML body using Thymeleaf
-        String messageForUser = String.format("Hello %s! You requested a password reset. If you didn't, just ignore this email.\n" +
-                        "To reset your password, follow the link:\n"
-                        + "http://localhost:8080/resetPassword/user=%s", recipientName, recipientEmail);
-        final String htmlContent = this.htmlTemplateEngine.process(messageForUser, ctx);
-        message.setText(htmlContent, true /* isHtml */);
+        email.setTo(recipientEmail);
+        email.setSubject(MAIL_SUBJECT);
+        email.setFrom(new InternetAddress(mailFrom, mailFromName));
 
-        // Send email
-        this.mailSender.send(mimeMessage);
+        final Context ctx = new Context(locale);
+        ctx.setVariable("email", recipientEmail);
+        ctx.setVariable("name", recipientName);
+        ctx.setVariable("springLogo", SPRING_LOGO_IMAGE);
+        ctx.setVariable("url", "http://localhost:8080/resetPassword?email=" + recipientEmail);
+
+        final String htmlContent = this.htmlTemplateEngine.process(TEMPLATE_NAME, ctx);
+
+        email.setText(htmlContent, true);
+
+        ClassPathResource clr = new ClassPathResource(SPRING_LOGO_IMAGE);
+
+        email.addInline("springLogo", clr, PNG_MIME);
+
+        mailSender.send(mimeMessage);
     }
 
 

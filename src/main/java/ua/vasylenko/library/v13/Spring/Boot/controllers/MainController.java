@@ -9,10 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ua.vasylenko.library.v13.Spring.Boot.DTO.PersonDTO;
 import ua.vasylenko.library.v13.Spring.Boot.models.Person;
@@ -21,6 +18,7 @@ import ua.vasylenko.library.v13.Spring.Boot.services.EmailService;
 import ua.vasylenko.library.v13.Spring.Boot.services.PeopleService;
 import ua.vasylenko.library.v13.Spring.Boot.util.PersonDTOValidator;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
 @Controller
@@ -40,7 +38,9 @@ public class MainController {
     }
 
     @GetMapping("/auth/login")
-    public String loginPage() {
+    public String loginPage(@RequestParam(value = "message", required = false) String message, Model model) {
+        if (message != null)
+            model.addAttribute("message", message);
         return "auth/login";
     }
 
@@ -73,18 +73,35 @@ public class MainController {
     }
 
     @GetMapping("/recovery")
-    public String recoverMyPassword(@RequestParam(value = "error", required = false) Boolean error) {
+    public String recoverMyPassword(@RequestParam(value = "error", required = false) Boolean error, Model model) {
+        if (error != null && error)
+            model.addAttribute("message", "Incorrect email!");
         return "auth/recovery";
     }
 
     @PostMapping("/recovery")
-    public String recoveryProcess(@RequestParam("email") String email, RedirectAttributes redirectAttributes) throws MessagingException {
+    public String recoveryProcess(@RequestParam("email") String email,
+                                  RedirectAttributes redirectAttributes) throws MessagingException, UnsupportedEncodingException {
         Person personFromDb = peopleService.getPerson(email).orElse(null);
         if (personFromDb == null) {
-            redirectAttributes.addFlashAttribute("error", true);
-            return "auth/recovery";
+            redirectAttributes.addAttribute("error", true);
+            return "redirect:/recovery";
         }
         this.emailService.sendSimpleMail(personFromDb.getName(), email, Locale.ENGLISH);
-        return "redirect:/auth/sent.html";
+        return "auth/successSendEmail";
     }
+
+    @GetMapping("/resetPassword")
+    public String resetPassword(@RequestParam("email") String email, RedirectAttributes redirectAttributes) {
+        redirectAttributes.addAttribute("email", email);
+        return "auth/newPasswordPage";
+    }
+
+    @PostMapping("/resetPassword")
+    public String resetPass(@RequestParam("email") String email, @RequestParam("passwword") String password){
+        peopleService.updateUserPassword(email, password);
+        return "redirect:/auth/login";
+    }
+
+
 }

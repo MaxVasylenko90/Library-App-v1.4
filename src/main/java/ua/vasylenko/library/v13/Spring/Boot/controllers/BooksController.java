@@ -16,6 +16,8 @@ import ua.vasylenko.library.v13.Spring.Boot.services.PeopleService;
 import ua.vasylenko.library.v13.Spring.Boot.util.BookDTOValidator;
 
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -130,5 +132,7 @@ public class BooksController {
     public PersonDTOAllFields convertToPersonDTO(Person person) {
         return modelMapper.map(person, PersonDTOAllFields.class);
     }
+
+
 
 }
