@@ -12,6 +12,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ua.vasylenko.library.v13.Spring.Boot.DTO.PersonDTO;
+import ua.vasylenko.library.v13.Spring.Boot.DTO.PersonDTOResetPass;
 import ua.vasylenko.library.v13.Spring.Boot.models.Person;
 import ua.vasylenko.library.v13.Spring.Boot.security.PersonDetails;
 import ua.vasylenko.library.v13.Spring.Boot.services.EmailService;
@@ -92,14 +93,15 @@ public class MainController {
     }
 
     @GetMapping("/resetPassword")
-    public String resetPassword(@RequestParam("email") String email, RedirectAttributes redirectAttributes) {
-        redirectAttributes.addAttribute("email", email);
+    public String resetPassword(@RequestParam("email") String email, Model model,
+                                @ModelAttribute("user") PersonDTOResetPass user) {
+        model.addAttribute("email", email);
         return "auth/newPasswordPage";
     }
 
-    @PostMapping("/resetPassword")
-    public String resetPass(@RequestParam("email") String email, @RequestParam("passwword") String password){
-        peopleService.updateUserPassword(email, password);
+    @PatchMapping("/resetPassword/{id}")
+    public String resetPass(@PathVariable("id") String email, @ModelAttribute("user") PersonDTOResetPass user) {
+        peopleService.updateUserPassword(email, user.getPassword());
         return "redirect:/auth/login";
     }
 
