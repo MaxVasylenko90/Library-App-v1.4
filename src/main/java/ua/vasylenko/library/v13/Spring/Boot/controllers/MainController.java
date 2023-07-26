@@ -99,9 +99,9 @@ public class MainController {
         return "auth/newPasswordPage";
     }
 
-    @PatchMapping("/resetPassword/{id}")
-    public String resetPass(@PathVariable("id") String email, @ModelAttribute("user") PersonDTOResetPass user) {
-        peopleService.updateUserPassword(email, user.getPassword());
+    @PatchMapping("/resetPassword")
+    public String resetPass(@ModelAttribute("user") PersonDTOResetPass user) {
+        peopleService.updateUserPassword(user.getEmail(), user.getPassword());
         return "redirect:/auth/login";
     }
 
